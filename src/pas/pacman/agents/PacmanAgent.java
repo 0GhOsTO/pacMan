@@ -175,6 +175,7 @@ public class PacmanAgent
         return (float) movingCost;
     }
 
+    // CURRENTLY NOT USING IT
     // Return the minimum distance between two tiles.
     public float getMinDistTile(final PelletVertex src, final PelletVertex tgt, final GameView game) {
         // Running the BFS with the multi-source.
@@ -258,9 +259,29 @@ public class PacmanAgent
         // SMALLER THE NUMBER, WE ARE MOVING ON TO THE PLACE WHERE IT IS
         // LOCATED(Djaikstra)
 
-        //
+        // ####### REAL STARTS HERE #######
+        Set<Coordinate> pellets = src.getRemainingPelletCoordinates();
+        if (pellets.isEmpty())
+            return 0f;
+        Coordinate pacMan = src.getPacmanCoordinate();
 
-        return best;
+        // Receive all the possible movings out there that is cached.
+        HashMap<Coordinate, Integer> fromSrc = moveCost.get(pacMan);
+        if (fromSrc == null) {
+            fromSrc = new HashMap<>();
+            moveCost.put(pacMan, fromSrc);
+        }
+
+        float nearest = Float.MAX_VALUE;
+        for (Coordinate location : pellets) {
+            float dist = fromSrc.get(location);
+            if (dist < nearest) {
+                nearest = dist;
+            }
+        }
+
+        // Just return the nearest saved pellet
+        return nearest;
     }
 
     @Override
