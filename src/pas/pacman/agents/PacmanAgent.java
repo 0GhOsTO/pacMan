@@ -119,6 +119,7 @@ public class PacmanAgent
                     continue;
                 }
                 final int dist = Math.max(0, path.getNumVertices() - 1);
+                
                 moveCost.get(src).put(pellet, dist);
                 // same in opposite.
                 if (moveCost.get(pellet) == null) {
@@ -289,7 +290,13 @@ public class PacmanAgent
         for (Coordinate p : pellets) {
             // Vice versa updating
             if (!fromSrc.containsKey(p)) {
-                int dist = graphSearch(pacMan, p, game).getNumVertices() - 1;
+                int dist = 0;
+                Path<Coordinate> path = graphSearch(pacMan, p, game);
+                if(path == null){
+                    dist = Math.abs(pacMan.getXCoordinate() - p.getXCoordinate()) + Math.abs(pacMan.getYCoordinate() - p.getYCoordinate());
+                } else {
+                    dist = path.getNumVertices() - 1;
+                }
                 fromSrc.put(p, dist);
                 if (moveCost.get(p) == null) {
                     moveCost.put(p, new HashMap<>());
@@ -338,6 +345,12 @@ public class PacmanAgent
             Node temp = openSet.poll();
             Path<PelletVertex> curPath = temp.path;
             PelletVertex cur = curPath.getDestination();
+
+            System.out.println("temp: " + temp);
+            System.out.println("curPath: " + curPath);
+            System.out.println("cur: " + cur);
+
+            // break;
 
             if (cur.getRemainingPelletCoordinates().isEmpty()) {
                 return curPath;
