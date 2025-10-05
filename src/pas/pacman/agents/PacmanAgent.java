@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.PriorityQueue;
 // SYSTEM IMPORTS
 import java.util.Random;
 import java.util.Set;
@@ -117,7 +118,9 @@ public class PacmanAgent
                     continue;
                 }
                 final int dist = Math.max(0, path.getNumVertices() - 1);
-                cacheVal.put(pellet, dist);
+                moveCost.get(src).put(pellet, dist);
+                // same in opposite.
+                moveCost.get(pellet).put(src, dist);
             }
 
             PelletVertex next = vertex.removePellet(pellet);
@@ -239,22 +242,23 @@ public class PacmanAgent
 
         // Best distance calculation over.
         // =======Example of heuristics in MANHATTEN DISTANCE =======
-        if (src.getRemainingPelletCoordinates().isEmpty()) {
-            return 0f;
-        }
+        // if (src.getRemainingPelletCoordinates().isEmpty()) {
+        // return 0f;
+        // }
 
-        Coordinate testing = src.getPacmanCoordinate();
-        int srcX = testing.getXCoordinate();
-        int srcY = testing.getYCoordinate();
-        int best = Integer.MAX_VALUE;
+        // Coordinate testing = src.getPacmanCoordinate();
+        // int srcX = testing.getXCoordinate();
+        // int srcY = testing.getYCoordinate();
+        // int best = Integer.MAX_VALUE;
 
-        for (Coordinate coor : src.getRemainingPelletCoordinates()) {
-            int distance = Math.abs(coor.getXCoordinate() - srcX) + Math.abs(coor.getYCoordinate() - srcY);
-            if (distance < best) {
-                best = distance;
-            }
-        }
-        // =======Example of heuristics in MANHATTEN DISTANCE =======
+        // for (Coordinate coor : src.getRemainingPelletCoordinates()) {
+        // int distance = Math.abs(coor.getXCoordinate() - srcX) +
+        // Math.abs(coor.getYCoordinate() - srcY);
+        // if (distance < best) {
+        // best = distance;
+        // }
+        // }
+        // // =======Example of heuristics in MANHATTEN DISTANCE =======
 
         // SMALLER THE NUMBER, WE ARE MOVING ON TO THE PLACE WHERE IT IS
         // LOCATED(Djaikstra)
@@ -280,13 +284,36 @@ public class PacmanAgent
             }
         }
 
-        // Just return the nearest saved pellet
+        // Just return the nearest saved pellet's value
         return nearest;
     }
 
     @Override
     public Path<PelletVertex> findPathToEatAllPelletsTheFastest(final GameView game) {
+        PelletVertex start = new PelletVertex(game);
+
+        //======AstarAlgs======
+        PriorityQueue<Coordinate> openSet = new PriorityQueue<>();
+        HashMap<Coordinate, Integer> gScore = new HashMap<>();
+        openSet.add(src);
+        gScore.put(src, 0);
+
+        while (!openSet.isEmpty()) {
+            Coordinate cur = openSet.poll();
+            if (src.equals(tgt)) {
+                return;
+            }
+            for (Coordinate neighbor : getOutgoingNeighbors(cur, game)) {
+                int newG = gScore.get(cur) /* + Neightbor */;
+                if( newG < gScore.){
+                    gScore.put(neighbor, newG);
+                    openSet.add(neighbor);
+                }
+            }
+        }
+
         return null;
+        //======AstarAlgs======
     }
 
     @Override
