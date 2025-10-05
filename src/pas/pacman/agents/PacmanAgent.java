@@ -3,6 +3,7 @@ package src.pas.pacman.agents;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -30,6 +31,7 @@ public class PacmanAgent
         implements ThriftyPelletEater {
 
     private final Random random;
+    private final HashMap<Coordinate, HashMap<Coordinate, Integer>> moveCost = new HashMap<>();
 
     public PacmanAgent(int myUnitId,
             int pacmanId,
@@ -42,6 +44,9 @@ public class PacmanAgent
         return this.random;
     }
 
+    // Think Vertex = One huge game including the location of Pacman and Pellets
+    // getOutoingNeighbors returns every scenarios of eating the pellets and save
+    // the distance from it.
     @Override
     public Set<PelletVertex> getOutoingNeighbors(final PelletVertex vertex,
             final GameView game) {
@@ -69,7 +74,7 @@ public class PacmanAgent
         // Queue<Coordinate> q = new ArrayDeque<>();
         // // right, left, up, down
         // // Check if it's illegal move or not
-        Coordinate src = game.getEntity(game.getPacmanId()).getCurrentCoordinate();
+        Coordinate src = vertex.getPacmanCoordinate();
         // int x = src.getXCoordinate();
         // int y = src.getYCoordinate();
         // // Initializing the start of the BFS
@@ -98,24 +103,25 @@ public class PacmanAgent
         // return res;
 
         Set<PelletVertex> res = new HashSet<>();
+        HashMap<Coordinate, Integer> cacheVal = moveCost.get(src);
+        if (cacheVal == null) {
+            cacheVal = new HashMap<>();
+            moveCost.put(src, cacheVal);
+        }
         // Take the rest over pellets
         for (Coordinate pellet : vertex.getRemainingPelletCoordinates()) {
-            // Check if it's reachable or not
-            boolean reach;
-            // Found inside the pellet island.
-            if (pellet.equals(src)) {
-                reach = true;
-            } else {
-                // Check if we can reach there or not
-                Path<Coordinate> path = graphSearch(src, pellet, game);
-                reach = (path != null);
+            // If it does not exist...
+            if (!cacheVal.containsKey(pellet)) {
+                final Path<Coordinate> path = graphSearch(src, pellet, game);
+                if (path == null) {
+                    continue;
+                }
+                final int dist = Math.max(0, path.getNumVertices() - 1);
+                cacheVal.put(pellet, dist);
             }
 
-            // Yes we can reach there.
-            if (reach) {
-                PelletVertex next = vertex.removePellet(pellet);
-                res.add(next);
-            }
+            PelletVertex next = vertex.removePellet(pellet);
+            res.add(next);
         }
 
         return res;
@@ -125,14 +131,14 @@ public class PacmanAgent
     @Override
     public float getEdgeWeight(final PelletVertex src,
             final PelletVertex dst) {
-        //Find the average of the both of the coordinate. 
+        // Find the average of the both of the coordinate.
         // float srcCount = 0;
         // float srcX = 0;
         // float srcY = 0;
         // for(Coordinate srcCor: src.getRemainingPelletCoordinates()){
-        //     srcCount++;
-        //     srcX += srcCor.getXCoordinate();
-        //     srcY += srcCor.getYCoordinate();
+        // srcCount++;
+        // srcX += srcCor.getXCoordinate();
+        // srcY += srcCor.getYCoordinate();
         // }
         // srcX = srcX/srcCount;
         // srcY = srcY/srcCount;
@@ -141,61 +147,66 @@ public class PacmanAgent
         // float dstX = 0;
         // float dstY = 0;
         // for(Coordinate dstCor: dst.getRemainingPelletCoordinates()){
-        //     dstCount++;
-        //     dstX += dstCor.getXCoordinate();
-        //     dstY += dstCor.getYCoordinate();
+        // dstCount++;
+        // dstX += dstCor.getXCoordinate();
+        // dstY += dstCor.getYCoordinate();
         // }
         // dstX = dstX/dstCount;
         // dstY = dstY/dstCount;
-        //Using the manhatten distance to keep the units. 
-        //1 = 1 tile
+        // Using the manhatten distance to keep the units.
+        // 1 = 1 tile
 
-        //Basically the difference between which are eaten and which are not. 
+        // Basically the difference between which are eaten and which are not.
 
         // <RULE>
         // 1 Vertex = 1 difference
-        float dist = 0f;
-        Set<Coordinate> srcSet = src.getRemainingPelletCoordinates();
-        for(Coordinate dstCoor: dst.getRemainingPelletCoordinates()){
-            if(!srcSet.contains(dstCoor)){
-                dist+=1;
+        Coordinate srcPac = src.getPacmanCoordinate();
+        Coordinate taken = null;
+        Set<Coordinate> dstSet = dst.getRemainingPelletCoordinates();
+        for (Coordinate srcCoor : src.getRemainingPelletCoordinates()) {
+            if (!dstSet.contains(srcCoor)) {
+                taken = srcCoor;
             }
         }
 
-        return dist;
+        // Look up the cached board
+        int movingCost = moveCost.get(srcPac).get(taken);
+
+        return (float) movingCost;
     }
 
-    public int getDistVertex (final PelletVertex src, final PelletVertex tgt, final GameView game){
+    // Return the minimum distance between two tiles.
+    public float getMinDistTile(final PelletVertex src, final PelletVertex tgt, final GameView game) {
         // Running the BFS with the multi-source.
         Coordinate cur = src.getPacmanCoordinate();
         PelletVertex srcCopy = src;
         Queue<Coordinate> q = new LinkedList<>();
         HashSet<Coordinate> seen = new HashSet<>();
-        Set<Coordinate> tgtSet= tgt.getRemainingPelletCoordinates();
+        Set<Coordinate> tgtSet = tgt.getRemainingPelletCoordinates();
         float minDistBetweenVertex = Float.POSITIVE_INFINITY;
-        //=======variable creation=======
-        //=======Initilization step=======
+        // =======variable creation=======
+        // =======Initilization step=======
         q.add(cur);
         seen.add(cur);
-        //================================
-        for(Coordinate temp : srcCopy.getRemainingPelletCoordinates()){
+        // ================================
+        for (Coordinate temp : srcCopy.getRemainingPelletCoordinates()) {
             q.add(temp);
             seen.add(temp);
         }
-        while(!q.isEmpty()){
+        while (!q.isEmpty()) {
             Coordinate temp = q.poll();
             Set<Coordinate> neighbors = getOutgoingNeighbors(temp, game);
 
-            //Already seen
-            for(Coordinate neighbor: neighbors){
-                //Run the BFS and found the closest one. 
-                if(tgtSet.contains(neighbor)){
-                    if(minDistBetweenVertex > graphSearch(cur, temp, game).getNumVertices())
-                    minDistBetweenVertex = graphSearch(cur, temp, game).getNumVertices();
-                }    
-                if(seen.contains(neighbor)){
+            // Already seen
+            for (Coordinate neighbor : neighbors) {
+                // Run the BFS and found the closest one.
+                if (tgtSet.contains(neighbor)) {
+                    if (minDistBetweenVertex > graphSearch(cur, temp, game).getNumVertices())
+                        minDistBetweenVertex = graphSearch(cur, temp, game).getNumVertices();
+                }
+                if (seen.contains(neighbor)) {
                     continue;
-                }else{
+                } else {
                     q.add(neighbor);
                     seen.add(neighbor);
                 }
@@ -203,15 +214,14 @@ public class PacmanAgent
 
         }
 
-
-        return -1;
+        return minDistBetweenVertex;
     }
 
-    public int getPathLength(Path<Coordinate> p){
-        int length = 0;
-        Path<Coordinate> cur = p;
+    // public int getPathLength(Path<Coordinate> p){
+    // int length = 0;
+    // Path<Coordinate> cur = p;
 
-    }
+    // }
 
     @Override
     public float getHeuristic(final PelletVertex src,
@@ -223,12 +233,12 @@ public class PacmanAgent
 
         // getEdgeWeight()
         // <RULE>
-        // 1 Vertex = 1 
-        // 1 tile = 1 
+        // 1 Vertex = 1
+        // 1 tile = 1
 
-        // Best distance calculation over. 
-        // =======Example of heuristics in MANHATTEN DISTANCE ======= 
-        if (src.getRemainingPelletCoordinates().isEmpty()){
+        // Best distance calculation over.
+        // =======Example of heuristics in MANHATTEN DISTANCE =======
+        if (src.getRemainingPelletCoordinates().isEmpty()) {
             return 0f;
         }
 
@@ -237,16 +247,18 @@ public class PacmanAgent
         int srcY = testing.getYCoordinate();
         int best = Integer.MAX_VALUE;
 
-        for(Coordinate coor: src.getRemainingPelletCoordinates()){
-            int distance = Math.abs(coor.getXCoordinate() - srcX)+Math.abs(coor.getYCoordinate() - srcY);
-            if (distance<best){
+        for (Coordinate coor : src.getRemainingPelletCoordinates()) {
+            int distance = Math.abs(coor.getXCoordinate() - srcX) + Math.abs(coor.getYCoordinate() - srcY);
+            if (distance < best) {
                 best = distance;
             }
         }
-        // =======Example of heuristics in MANHATTEN DISTANCE ======= 
+        // =======Example of heuristics in MANHATTEN DISTANCE =======
 
-        // Closest, big number
+        // SMALLER THE NUMBER, WE ARE MOVING ON TO THE PLACE WHERE IT IS
+        // LOCATED(Djaikstra)
 
+        //
 
         return best;
     }
