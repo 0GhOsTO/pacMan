@@ -8,7 +8,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.PriorityQueue;
 // SYSTEM IMPORTS
 import java.util.Random;
 import java.util.Set;
@@ -109,7 +108,6 @@ public class PacmanAgent
             cacheVal = new HashMap<>();
             moveCost.put(src, cacheVal);
         }
-
         // Take the rest over pellets
         for (Coordinate pellet : vertex.getRemainingPelletCoordinates()) {
             // If it does not exist...
@@ -119,12 +117,7 @@ public class PacmanAgent
                     continue;
                 }
                 final int dist = Math.max(0, path.getNumVertices() - 1);
-                moveCost.get(src).put(pellet, dist);
-                // same in opposite.
-                if (moveCost.get(pellet) == null) {
-                    moveCost.put(pellet, new HashMap<>());
-                }
-                moveCost.get(pellet).put(src, dist);
+                cacheVal.put(pellet, dist);
             }
 
             PelletVertex next = vertex.removePellet(pellet);
@@ -234,7 +227,6 @@ public class PacmanAgent
     @Override
     public float getHeuristic(final PelletVertex src,
             final GameView game) {
-        System.out.println("getHeuristic CALLED");
         // Some of the ideas for the Heuristics
         // 1. Closest = High number(MST)
         // 2. Building the shortest path.
@@ -247,57 +239,37 @@ public class PacmanAgent
 
         // Best distance calculation over.
         // =======Example of heuristics in MANHATTEN DISTANCE =======
-        // if (src.getRemainingPelletCoordinates().isEmpty()) {
-        // return 0f;
-        // }
+        if (src.getRemainingPelletCoordinates().isEmpty()) {
+            return 0f;
+        }
 
-        // Coordinate testing = src.getPacmanCoordinate();
-        // int srcX = testing.getXCoordinate();
-        // int srcY = testing.getYCoordinate();
-        // int best = Integer.MAX_VALUE;
+        Coordinate testing = src.getPacmanCoordinate();
+        int srcX = testing.getXCoordinate();
+        int srcY = testing.getYCoordinate();
+        int best = Integer.MAX_VALUE;
 
-        // for (Coordinate coor : src.getRemainingPelletCoordinates()) {
-        // int distance = Math.abs(coor.getXCoordinate() - srcX) +
-        // Math.abs(coor.getYCoordinate() - srcY);
-        // if (distance < best) {
-        // best = distance;
-        // }
-        // }
-        // // =======Example of heuristics in MANHATTEN DISTANCE =======
+        for (Coordinate coor : src.getRemainingPelletCoordinates()) {
+            int distance = Math.abs(coor.getXCoordinate() - srcX) + Math.abs(coor.getYCoordinate() - srcY);
+            if (distance < best) {
+                best = distance;
+            }
+        }
+        // =======Example of heuristics in MANHATTEN DISTANCE =======
 
         // SMALLER THE NUMBER, WE ARE MOVING ON TO THE PLACE WHERE IT IS
         // LOCATED(Djaikstra)
 
         // ####### REAL STARTS HERE #######
         Set<Coordinate> pellets = src.getRemainingPelletCoordinates();
-        System.out.println("pellets: " + pellets);
-
         if (pellets.isEmpty())
             return 0f;
         Coordinate pacMan = src.getPacmanCoordinate();
-        System.out.println("Pacman receieved: " + pacMan);
 
         // Receive all the possible movings out there that is cached.
         HashMap<Coordinate, Integer> fromSrc = moveCost.get(pacMan);
-        System.out.println("moveCost: " + moveCost);
-
         if (fromSrc == null) {
             fromSrc = new HashMap<>();
             moveCost.put(pacMan, fromSrc);
-        }
-
-        for (Coordinate p : pellets) {
-            // Vice versa updating
-            if (!fromSrc.containsKey(p)) {
-                int dist = graphSearch(pacMan, p, game).getNumVertices() - 1;
-                fromSrc.put(p, dist);
-                if (moveCost.get(p) == null) {
-                    moveCost.put(p, new HashMap<>());
-                }
-                if (!moveCost.get(p).containsKey(pacMan)) {
-                    moveCost.get(p).put(pacMan, dist);
-                }
-            }
         }
 
         float nearest = Float.MAX_VALUE;
@@ -308,59 +280,13 @@ public class PacmanAgent
             }
         }
 
-        // Just return the nearest saved pellet's value
+        // Just return the nearest saved pellet
         return nearest;
-    }
-
-    private static final class Node {
-        final float f;
-        final Path<PelletVertex> path;
-
-        Node(float f, Path<PelletVertex> path) {
-            this.f = f;
-            this.path = path;
-        }
     }
 
     @Override
     public Path<PelletVertex> findPathToEatAllPelletsTheFastest(final GameView game) {
-        PelletVertex start = new PelletVertex(game);
-
-        // ======AstarAlgs======
-        PriorityQueue<Node> openSet = new PriorityQueue<>(java.util.Comparator.comparingDouble(n -> n.f));
-        HashMap<PelletVertex, Float> gScore = new HashMap<>();
-        HashSet<PelletVertex> closed = new HashSet<>();
-
-        gScore.put(start, 0f);
-        openSet.add(new Node(getHeuristic(start, game), new Path<>(start)));
-
-        while (!openSet.isEmpty()) {
-            Node temp = openSet.poll();
-            Path<PelletVertex> curPath = temp.path;
-            PelletVertex cur = curPath.getDestination();
-
-            if (cur.getRemainingPelletCoordinates().isEmpty()) {
-                return curPath;
-            }
-
-            if (!closed.add(cur))
-                continue;
-
-            for (PelletVertex next : getOutoingNeighbors(cur, game)) {
-                float count = getEdgeWeight(cur, next);
-                float tot = gScore.get(cur) + count;
-                Float old = gScore.get(next);
-                if (old == null || tot < old) {
-                    gScore.put(next, tot);
-                    float fin = tot + getHeuristic(next, game);
-                    openSet.add(new Node(fin, new Path<>(next, count, curPath)));
-                }
-
-            }
-        }
-
         return null;
-        // ======AstarAlgs======
     }
 
     @Override
