@@ -32,7 +32,7 @@ public class PacmanAgent
         implements ThriftyPelletEater {
 
     private final Random random;
-    private final HashMap<Coordinate, HashMap<Coordinate, Integer>> moveCost = new HashMap<>();
+    private final HashMap<Coordinate, HashMap<Coordinate, Float>> moveCost = new HashMap<>();
 
     public PacmanAgent(int myUnitId,
             int pacmanId,
@@ -366,6 +366,8 @@ public class PacmanAgent
 
             for (PelletVertex next : getOutoingNeighbors(cur, game)) {
                 System.out.println("next: " + next);
+                if()
+
                 float count = getEdgeWeight(cur, next);
                 System.out.println("getEdgeWeight: " + count);
                 // =======This is for validation=======
@@ -441,6 +443,21 @@ public class PacmanAgent
             Path<Coordinate> curPath = queue.poll();
             Coordinate cur = curPath.getDestination();
             for (Coordinate temp : getOutgoingNeighbors(cur, game)) {
+                // Caching while running BFS
+                if (moveCost.get(cur) == null) {
+                    moveCost.put(cur, new HashMap<>());
+                    moveCost.get(cur).put(temp, 1.0f);
+                } else {
+                    moveCost.get(cur).put(temp, moveCost.get(cur).get(temp) + 1);
+                }
+                // And vice versa
+                if (moveCost.get(temp) == null) {
+                    moveCost.put(temp, new HashMap<>());
+                    moveCost.get(temp).put(cur, 1.0f);
+                } else {
+                    moveCost.get(temp).put(cur, moveCost.get(temp).get(cur) + 1);
+                }
+
                 // Return the path once it hits the target.
                 if (temp.equals(tgt)) {
                     return new Path<>(temp, 1.0f, curPath);
