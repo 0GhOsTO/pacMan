@@ -234,7 +234,7 @@ public class PacmanAgent
     @Override
     public float getHeuristic(final PelletVertex src,
             final GameView game) {
-        System.out.println("getHeuristic CALLED");
+        // System.out.println("getHeuristic CALLED");
         Set<Coordinate> pellets = src.getRemainingPelletCoordinates();
         if (pellets.isEmpty()) return 0f;
         
@@ -286,9 +286,9 @@ public class PacmanAgent
             Path<PelletVertex> curPath = temp.path;
             PelletVertex cur = curPath.getDestination();
 
-            System.out.println("temp: " + temp);
-            System.out.println("curPath: " + curPath);
-            System.out.println("cur: " + cur);
+            // System.out.println("temp: " + temp);
+            // System.out.println("curPath: " + curPath);
+            // System.out.println("cur: " + cur);
 
             // break;
 
@@ -300,10 +300,8 @@ public class PacmanAgent
                 continue;
 
             for (PelletVertex next : getOutoingNeighbors(cur, game)) {
-                System.out.println("next: " + next);
 
                 float count = getEdgeWeight(cur, next);
-                System.out.println("getEdgeWeight: " + count);
 
                 float tot = gScore.get(cur) + count;
 
@@ -312,15 +310,15 @@ public class PacmanAgent
                     gScore.put(next, Float.POSITIVE_INFINITY);
                 }
                 Float old = gScore.get(next);
-                System.out.println("old: " + old);
+                // System.out.println("old: " + old);
                 if (old == null || tot < old) {
                     // Update the cost of getting into the next pellet
                     gScore.put(next, tot);
-                    System.out.println("gScoreg.get(next): " + gScore.get(next));
+                    // System.out.println("gScoreg.get(next): " + gScore.get(next));
                     float fin = tot + getHeuristic(next, game);
-                    System.out.println("fin: " + tot + " + " + getHeuristic(next, game) + " = " + fin);
+                    // System.out.println("fin: " + tot + " + " + getHeuristic(next, game) + " = " + fin);
                     openSet.add(new Node(fin, new Path<>(next, count, curPath)));
-                    System.out.println("OpenSet: " + openSet);
+                    // System.out.println("OpenSet: " + openSet);
                     // // =======This is for validation=======
                     // return new Path<>(start);
                     // // ====================================
@@ -396,7 +394,7 @@ public class PacmanAgent
 
                     moveCost.computeIfAbsent(temp, k -> new HashMap<>()).putIfAbsent(src, d);
                     if (temp.equals(tgt)) {
-                        System.out.println("graphSearch Result: " + moveCost);
+                        // System.out.println("graphSearch Result: " + moveCost);
                         return new Path<>(temp, 1.0f, curPath);
                     }
                     seen.add(temp);
@@ -405,7 +403,7 @@ public class PacmanAgent
             }
         }
 
-        System.out.println("graphSearch Result: " + moveCost);
+        // System.out.println("graphSearch Result: " + moveCost);
 
         return null;
     }
@@ -418,7 +416,7 @@ public class PacmanAgent
         // Receive the target path.
         // Path<Coordinate> tgtPath = graphSearch(src,tgt, game);
 
-        // System.out.println("src: "+src);
+        // // System.out.println("src: "+src);
         // //Scan the whole map
         // Set<Coordinate> pellets = new HashSet<>();
 
@@ -456,7 +454,7 @@ public class PacmanAgent
             finPlan.push(coords.get(i));
         }
 
-        // System.out.println("stack: " + finPlan);
+        // // System.out.println("stack: " + finPlan);
         finPlan.pop();
         this.setPlanToGetToTarget(finPlan);
 
@@ -464,11 +462,11 @@ public class PacmanAgent
 
     @Override
     public Action makeMove(final GameView game) {
-        System.out.println("values: " + Action.values());
-        System.out.println("1makeMove called");
+        // System.out.println("values: " + Action.values());
+        // System.out.println("1makeMove called");
         // pop form teh received Stack and move the Pacman.
         Stack<Coordinate> plan = this.getPlanToGetToTarget();
-        System.out.println("2plan: " + plan);
+        // System.out.println("2plan: " + plan);
         Coordinate src = game.getEntity(game.getPacmanId()).getCurrentCoordinate();
 
         // Edgecase:
@@ -482,47 +480,47 @@ public class PacmanAgent
         Coordinate cur = plan.pop();
         // update the method
         this.setPlanToGetToTarget(plan);
-        System.out.println("3cur: " + cur);
-        System.out.println("4after pop: " + this.getPlanToGetToTarget());
+        // System.out.println("3cur: " + cur);
+        // System.out.println("4after pop: " + this.getPlanToGetToTarget());
 
         int srcX = src.getXCoordinate();
         int srcY = src.getYCoordinate();
         int curX = cur.getXCoordinate();
         int curY = cur.getYCoordinate();
 
-        System.out.println("src(X,Y): " + srcX + " " + srcY);
-        System.out.println("cur(X,Y): " + curX + " " + curY);
+        // System.out.println("src(X,Y): " + srcX + " " + srcY);
+        // System.out.println("cur(X,Y): " + curX + " " + curY);
 
         // When they are same, just return nothing
         if (srcX == curX && srcY == curY) {
-            System.out.println("NULL");
+            // System.out.println("NULL");
             return null;
         }
 
         if (srcX - 1 == curX) {
-            System.out.println("WEST");
+            // System.out.println("WEST");
             return Action.WEST;
         }
 
         if (srcX + 1 == curX) {
-            System.out.println("EAST");
+            // System.out.println("EAST");
             return Action.EAST;
         }
 
         if (srcY - 1 == curY) {
-            System.out.println("NORTH");
+            // System.out.println("NORTH");
             return Action.NORTH;
         }
 
         if (srcY + 1 == curY) {
-            System.out.println("SOUTH");
+            // System.out.println("SOUTH");
             return Action.SOUTH;
         }
         // Example
         // return Action.values()[this.getRandom().nextInt(Action.values().length)];
 
         // Do not know what to do.
-        System.out.println("5DUNNO WHAT TO DO");
+        // System.out.println("5DUNNO WHAT TO DO");
         return null;
     }
 
