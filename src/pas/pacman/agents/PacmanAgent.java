@@ -32,7 +32,7 @@ public class PacmanAgent
         implements ThriftyPelletEater {
 
     private final Random random;
-    private final HashMap<Coordinate, HashMap<Coordinate, Float>> moveCost = new HashMap<>();
+    private final HashMap<Coordinate, HashMap<Coordinate, Integer>> moveCost = new HashMap<>();
 
     public PacmanAgent(int myUnitId,
             int pacmanId,
@@ -104,7 +104,7 @@ public class PacmanAgent
         // return res;
 
         Set<PelletVertex> res = new HashSet<>();
-        HashMap<Coordinate, Float> cacheVal = moveCost.get(src);
+        HashMap<Coordinate, Integer> cacheVal = moveCost.get(src);
         if (cacheVal == null) {
             cacheVal = new HashMap<>();
             moveCost.put(src, cacheVal);
@@ -120,12 +120,12 @@ public class PacmanAgent
                 }
                 final int dist = Math.max(0, path.getNumVertices() - 1);
 
-                moveCost.get(src).put(pellet, (float) dist);
+                moveCost.get(src).put(pellet, dist);
                 // same in opposite.
                 if (moveCost.get(pellet) == null) {
                     moveCost.put(pellet, new HashMap<>());
                 }
-                moveCost.get(pellet).put(src, (float) dist);
+                moveCost.get(pellet).put(src, dist);
             }
 
             PelletVertex next = vertex.removePellet(pellet);
@@ -177,7 +177,7 @@ public class PacmanAgent
             }
         }
 
-        float movingCost = moveCost.get(srcPac).get(taken);
+        int movingCost = moveCost.get(srcPac).get(taken);
 
         return (float) movingCost;
     }
@@ -278,7 +278,7 @@ public class PacmanAgent
         System.out.println("Pacman receieved: " + pacMan);
 
         // Receive all the possible movings out there that is cached.
-        HashMap<Coordinate, Float> fromSrc = moveCost.get(pacMan);
+        HashMap<Coordinate, Integer> fromSrc = moveCost.get(pacMan);
         System.out.println("moveCost: " + moveCost);
 
         if (fromSrc == null) {
@@ -297,12 +297,12 @@ public class PacmanAgent
                 } else {
                     dist = path.getNumVertices() - 1;
                 }
-                fromSrc.put(p, (float) dist);
+                fromSrc.put(p, dist);
                 if (moveCost.get(p) == null) {
                     moveCost.put(p, new HashMap<>());
                 }
                 if (!moveCost.get(p).containsKey(pacMan)) {
-                    moveCost.get(p).put(pacMan, (float) dist);
+                    moveCost.get(p).put(pacMan, dist);
                 }
             }
         }
@@ -443,16 +443,16 @@ public class PacmanAgent
             Coordinate cur = curPath.getDestination();
             for (Coordinate temp : getOutgoingNeighbors(cur, game)) {
                 // Caching while running BFS
-                if (moveCost.get(cur) == null) {
+                if (moveCost.get(cur) == null || moveCost.get(cur).get(temp) == null) {
                     moveCost.put(cur, new HashMap<>());
-                    moveCost.get(cur).put(temp, 1.0f);
+                    moveCost.get(cur).put(temp, 1);
                 } else {
                     moveCost.get(cur).put(temp, moveCost.get(cur).get(temp) + 1);
                 }
                 // And vice versa
-                if (moveCost.get(temp) == null) {
+                if (moveCost.get(temp) == null || moveCost.get(temp).get(cur) == null) {
                     moveCost.put(temp, new HashMap<>());
-                    moveCost.get(temp).put(cur, 1.0f);
+                    moveCost.get(temp).put(cur, 1);
                 } else {
                     moveCost.get(temp).put(cur, moveCost.get(temp).get(cur) + 1);
                 }
