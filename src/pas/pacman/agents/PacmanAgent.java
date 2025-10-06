@@ -446,15 +446,26 @@ public class PacmanAgent
                 if (moveCost.get(cur) == null || moveCost.get(cur).get(temp) == null) {
                     moveCost.put(cur, new HashMap<>());
                     moveCost.get(cur).put(temp, 1);
+                    System.out.println(
+                            "moveCost added: " + cur + " > " + temp + "| price: " + moveCost.get(cur).get(temp));
                 } else {
                     moveCost.get(cur).put(temp, moveCost.get(cur).get(temp) + 1);
+                    System.out.println(
+                            "moveCost added: " + cur + " > " + temp + "| price: " + moveCost.get(cur).get(temp));
+
                 }
                 // And vice versa
                 if (moveCost.get(temp) == null || moveCost.get(temp).get(cur) == null) {
                     moveCost.put(temp, new HashMap<>());
                     moveCost.get(temp).put(cur, 1);
+                    System.out.println(
+                            "moveCost added: " + temp + " > " + cur + "| price: " + moveCost.get(temp).get(cur));
+
                 } else {
                     moveCost.get(temp).put(cur, moveCost.get(temp).get(cur) + 1);
+                    System.out.println(
+                            "moveCost added: " + temp + " > " + cur + "| price: " + moveCost.get(temp).get(cur));
+
                 }
 
                 // Return the path once it hits the target.
