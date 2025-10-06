@@ -235,106 +235,23 @@ public class PacmanAgent
     public float getHeuristic(final PelletVertex src,
             final GameView game) {
         System.out.println("getHeuristic CALLED");
-        // Some of the ideas for the Heuristics
-        // 1. Closest = High number(MST)
-        // 2. Building the shortest path.
-        // 3. Grouping the nearby pellets into "clusters"
+        Set<Coordinate> pellets = src.getRemainingPelletCoordinates();
+        if (pellets.isEmpty()) return 0f;
+        
+        int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
 
-        // getEdgeWeight()
-        // <RULE>
-        // 1 Vertex = 1
-        // 1 tile = 1
-
-        // Best distance calculation over.
-        // =======Example of heuristics in MANHATTEN DISTANCE =======
-        // if (src.getRemainingPelletCoordinates().isEmpty()) {
-        // return 0f;
-        // }
-
-        // Coordinate testing = src.getPacmanCoordinate();
-        // int srcX = testing.getXCoordinate();
-        // int srcY = testing.getYCoordinate();
-        // int best = Integer.MAX_VALUE;
-
-        // for (Coordinate coor : src.getRemainingPelletCoordinates()) {
-        // int distance = Math.abs(coor.getXCoordinate() - srcX) +
-        // Math.abs(coor.getYCoordinate() - srcY);
-        // if (distance < best) {
-        // best = distance;
-        // }
-        // }
-        // // =======Example of heuristics in MANHATTEN DISTANCE =======
-
-        // SMALLER THE NUMBER, WE ARE MOVING ON TO THE PLACE WHERE IT IS
-        // LOCATED(Djaikstra)
-
-        // ####### REAL STARTS HERE #######
-        // Set<Coordinate> pellets = src.getRemainingPelletCoordinates();
-        // System.out.println("pellets: " + pellets);
-
-        // if (pellets.isEmpty())
-        // return 0f;
-        // Coordinate pacMan = src.getPacmanCoordinate();
-        // System.out.println("Pacman receieved: " + pacMan);
-
-        // // Receive all the possible movings out there that is cached.
-        // HashMap<Coordinate, Integer> fromSrc = moveCost.get(pacMan);
-        // System.out.println("moveCost: " + moveCost);
-
-        // if (fromSrc == null) {
-        // fromSrc = new HashMap<>();
-        // moveCost.put(pacMan, fromSrc);
-        // }
-
-        // for (Coordinate p : pellets) {
-        // // Vice versa updating
-        // if (!fromSrc.containsKey(p)) {
-        // int dist = 0;
-        // Path<Coordinate> path = graphSearch(pacMan, p, game);
-        // if (path == null) {
-        // dist = Math.abs(pacMan.getXCoordinate() - p.getXCoordinate())
-        // + Math.abs(pacMan.getYCoordinate() - p.getYCoordinate());
-        // } else {
-        // dist = path.getNumVertices() - 1;
-        // }
-        // fromSrc.put(p, dist);
-        // if (moveCost.get(p) == null) {
-        // moveCost.put(p, new HashMap<>());
-        // }
-        // if (!moveCost.get(p).containsKey(pacMan)) {
-        // moveCost.get(p).put(pacMan, dist);
-        // }
-        // }
-        // }
-
-        // float nearest = Float.MAX_VALUE;
-        // for (Coordinate location : pellets) {
-        // float dist = fromSrc.get(location);
-        // if (dist < nearest) {
-        // nearest = dist;
-        // }
-        // }
-
-        // Just return the nearest saved pellet's value
-
-        // Manhatten distance heuristics
-
-        if (src.getRemainingPelletCoordinates().isEmpty()) {
-            return 0f;
+        for(Coordinate coor : pellets){
+            minX = Math.min(minX, coor.getXCoordinate());
+            minY = Math.min(minY, coor.getYCoordinate());
+            maxX = Math.max(maxX, coor.getXCoordinate());
+            maxY = Math.max(maxY, coor.getYCoordinate());
         }
 
-        Coordinate testing = src.getPacmanCoordinate();
-        int srcX = testing.getXCoordinate();
-        int srcY = testing.getYCoordinate();
-        int best = Integer.MAX_VALUE;
-        for (Coordinate coor : src.getRemainingPelletCoordinates()) {
-            int distance = Math.abs(coor.getXCoordinate() - srcX) +
-                    Math.abs(coor.getYCoordinate() - srcY);
-            if (distance < best) {
-                best = distance;
-            }
-        }
-        return 0;
+        int dx = maxX - minX;
+        int dy = maxY - minY;
+
+        return dx + dy;
     }
 
     private static final class Node {
@@ -396,7 +313,7 @@ public class PacmanAgent
                 }
                 Float old = gScore.get(next);
                 System.out.println("old: " + old);
-                if (tot < old) {
+                if (old == null || tot < old) {
                     // Update the cost of getting into the next pellet
                     gScore.put(next, tot);
                     System.out.println("gScoreg.get(next): " + gScore.get(next));
