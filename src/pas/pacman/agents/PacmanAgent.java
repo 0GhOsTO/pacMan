@@ -104,7 +104,7 @@ public class PacmanAgent
         // return res;
 
         Set<PelletVertex> res = new HashSet<>();
-        HashMap<Coordinate, Integer> cacheVal = moveCost.get(src);
+        HashMap<Coordinate, Float> cacheVal = moveCost.get(src);
         if (cacheVal == null) {
             cacheVal = new HashMap<>();
             moveCost.put(src, cacheVal);
@@ -120,12 +120,12 @@ public class PacmanAgent
                 }
                 final int dist = Math.max(0, path.getNumVertices() - 1);
 
-                moveCost.get(src).put(pellet, dist);
+                moveCost.get(src).put(pellet, (float) dist);
                 // same in opposite.
                 if (moveCost.get(pellet) == null) {
                     moveCost.put(pellet, new HashMap<>());
                 }
-                moveCost.get(pellet).put(src, dist);
+                moveCost.get(pellet).put(src, (float) dist);
             }
 
             PelletVertex next = vertex.removePellet(pellet);
@@ -177,7 +177,7 @@ public class PacmanAgent
             }
         }
 
-        int movingCost = moveCost.get(srcPac).get(taken);
+        float movingCost = moveCost.get(srcPac).get(taken);
 
         return (float) movingCost;
     }
@@ -278,7 +278,7 @@ public class PacmanAgent
         System.out.println("Pacman receieved: " + pacMan);
 
         // Receive all the possible movings out there that is cached.
-        HashMap<Coordinate, Integer> fromSrc = moveCost.get(pacMan);
+        HashMap<Coordinate, Float> fromSrc = moveCost.get(pacMan);
         System.out.println("moveCost: " + moveCost);
 
         if (fromSrc == null) {
@@ -297,12 +297,12 @@ public class PacmanAgent
                 } else {
                     dist = path.getNumVertices() - 1;
                 }
-                fromSrc.put(p, dist);
+                fromSrc.put(p, (float) dist);
                 if (moveCost.get(p) == null) {
                     moveCost.put(p, new HashMap<>());
                 }
                 if (!moveCost.get(p).containsKey(pacMan)) {
-                    moveCost.get(p).put(pacMan, dist);
+                    moveCost.get(p).put(pacMan, (float) dist);
                 }
             }
         }
@@ -366,7 +366,6 @@ public class PacmanAgent
 
             for (PelletVertex next : getOutoingNeighbors(cur, game)) {
                 System.out.println("next: " + next);
-                if()
 
                 float count = getEdgeWeight(cur, next);
                 System.out.println("getEdgeWeight: " + count);
