@@ -269,54 +269,72 @@ public class PacmanAgent
         // LOCATED(Djaikstra)
 
         // ####### REAL STARTS HERE #######
-        Set<Coordinate> pellets = src.getRemainingPelletCoordinates();
-        System.out.println("pellets: " + pellets);
+        // Set<Coordinate> pellets = src.getRemainingPelletCoordinates();
+        // System.out.println("pellets: " + pellets);
 
-        if (pellets.isEmpty())
-            return 0f;
-        Coordinate pacMan = src.getPacmanCoordinate();
-        System.out.println("Pacman receieved: " + pacMan);
+        // if (pellets.isEmpty())
+        // return 0f;
+        // Coordinate pacMan = src.getPacmanCoordinate();
+        // System.out.println("Pacman receieved: " + pacMan);
 
-        // Receive all the possible movings out there that is cached.
-        HashMap<Coordinate, Integer> fromSrc = moveCost.get(pacMan);
-        System.out.println("moveCost: " + moveCost);
+        // // Receive all the possible movings out there that is cached.
+        // HashMap<Coordinate, Integer> fromSrc = moveCost.get(pacMan);
+        // System.out.println("moveCost: " + moveCost);
 
-        if (fromSrc == null) {
-            fromSrc = new HashMap<>();
-            moveCost.put(pacMan, fromSrc);
-        }
+        // if (fromSrc == null) {
+        // fromSrc = new HashMap<>();
+        // moveCost.put(pacMan, fromSrc);
+        // }
 
-        for (Coordinate p : pellets) {
-            // Vice versa updating
-            if (!fromSrc.containsKey(p)) {
-                int dist = 0;
-                Path<Coordinate> path = graphSearch(pacMan, p, game);
-                if (path == null) {
-                    dist = Math.abs(pacMan.getXCoordinate() - p.getXCoordinate())
-                            + Math.abs(pacMan.getYCoordinate() - p.getYCoordinate());
-                } else {
-                    dist = path.getNumVertices() - 1;
-                }
-                fromSrc.put(p, dist);
-                if (moveCost.get(p) == null) {
-                    moveCost.put(p, new HashMap<>());
-                }
-                if (!moveCost.get(p).containsKey(pacMan)) {
-                    moveCost.get(p).put(pacMan, dist);
-                }
-            }
-        }
+        // for (Coordinate p : pellets) {
+        // // Vice versa updating
+        // if (!fromSrc.containsKey(p)) {
+        // int dist = 0;
+        // Path<Coordinate> path = graphSearch(pacMan, p, game);
+        // if (path == null) {
+        // dist = Math.abs(pacMan.getXCoordinate() - p.getXCoordinate())
+        // + Math.abs(pacMan.getYCoordinate() - p.getYCoordinate());
+        // } else {
+        // dist = path.getNumVertices() - 1;
+        // }
+        // fromSrc.put(p, dist);
+        // if (moveCost.get(p) == null) {
+        // moveCost.put(p, new HashMap<>());
+        // }
+        // if (!moveCost.get(p).containsKey(pacMan)) {
+        // moveCost.get(p).put(pacMan, dist);
+        // }
+        // }
+        // }
 
-        float nearest = Float.MAX_VALUE;
-        for (Coordinate location : pellets) {
-            float dist = fromSrc.get(location);
-            if (dist < nearest) {
-                nearest = dist;
-            }
-        }
+        // float nearest = Float.MAX_VALUE;
+        // for (Coordinate location : pellets) {
+        // float dist = fromSrc.get(location);
+        // if (dist < nearest) {
+        // nearest = dist;
+        // }
+        // }
 
         // Just return the nearest saved pellet's value
-        return nearest;
+
+        // Manhatten distance heuristics
+
+        if (src.getRemainingPelletCoordinates().isEmpty()) {
+            return 0f;
+        }
+
+        Coordinate testing = src.getPacmanCoordinate();
+        int srcX = testing.getXCoordinate();
+        int srcY = testing.getYCoordinate();
+        int best = Integer.MAX_VALUE;
+        for (Coordinate coor : src.getRemainingPelletCoordinates()) {
+            int distance = Math.abs(coor.getXCoordinate() - srcX) +
+                    Math.abs(coor.getYCoordinate() - srcY);
+            if (distance < best) {
+                best = distance;
+            }
+        }
+        return 0;
     }
 
     private static final class Node {
@@ -369,16 +387,27 @@ public class PacmanAgent
 
                 float count = getEdgeWeight(cur, next);
                 System.out.println("getEdgeWeight: " + count);
-                // =======This is for validation=======
-                return new Path<>(start);
-                // ====================================
-                // float tot = gScore.get(cur) + count;
-                // Float old = gScore.get(next);
-                // if (old == null || tot < old) {
-                // gScore.put(next, tot);
-                // float fin = tot + getHeuristic(next, game);
-                // openSet.add(new Node(fin, new Path<>(next, count, curPath)));
-                // }
+
+                float tot = gScore.get(cur) + count;
+
+                // First time that it does not exist.s
+                if (gScore.get(next) == null) {
+                    gScore.put(next, Float.POSITIVE_INFINITY);
+                }
+                Float old = gScore.get(next);
+                System.out.println("old: " + old);
+                if (tot < old) {
+                    // Update the cost of getting into the next pellet
+                    gScore.put(next, tot);
+                    System.out.println("gScoreg.get(next): " + gScore.get(next));
+                    float fin = tot + getHeuristic(next, game);
+                    System.out.println("fin: " + tot + " + " + getHeuristic(next, game) + " = " + fin);
+                    openSet.add(new Node(fin, new Path<>(next, count, curPath)));
+                    System.out.println("OpenSet: " + openSet);
+                    // // =======This is for validation=======
+                    // return new Path<>(start);
+                    // // ====================================
+                }
             }
         }
 
@@ -450,6 +479,7 @@ public class PacmanAgent
 
                     moveCost.computeIfAbsent(temp, k -> new HashMap<>()).putIfAbsent(src, d);
                     if (temp.equals(tgt)) {
+                        System.out.println("graphSearch Result: " + moveCost);
                         return new Path<>(temp, 1.0f, curPath);
                     }
                     seen.add(temp);
