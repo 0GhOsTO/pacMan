@@ -119,7 +119,7 @@ public class PacmanAgent
                     continue;
                 }
                 final int dist = Math.max(0, path.getNumVertices() - 1);
-                
+
                 moveCost.get(src).put(pellet, dist);
                 // same in opposite.
                 if (moveCost.get(pellet) == null) {
@@ -177,7 +177,6 @@ public class PacmanAgent
             }
         }
 
-        // Look up the cached board
         int movingCost = moveCost.get(srcPac).get(taken);
 
         return (float) movingCost;
@@ -292,8 +291,9 @@ public class PacmanAgent
             if (!fromSrc.containsKey(p)) {
                 int dist = 0;
                 Path<Coordinate> path = graphSearch(pacMan, p, game);
-                if(path == null){
-                    dist = Math.abs(pacMan.getXCoordinate() - p.getXCoordinate()) + Math.abs(pacMan.getYCoordinate() - p.getYCoordinate());
+                if (path == null) {
+                    dist = Math.abs(pacMan.getXCoordinate() - p.getXCoordinate())
+                            + Math.abs(pacMan.getYCoordinate() - p.getYCoordinate());
                 } else {
                     dist = path.getNumVertices() - 1;
                 }
@@ -326,6 +326,11 @@ public class PacmanAgent
         Node(float f, Path<PelletVertex> path) {
             this.f = f;
             this.path = path;
+        }
+
+        @Override
+        public String toString() {
+            return "Node{ Path =  + path + " + ", cost= " + f + "}";
         }
     }
 
@@ -360,20 +365,23 @@ public class PacmanAgent
                 continue;
 
             for (PelletVertex next : getOutoingNeighbors(cur, game)) {
+                System.out.println("next: " + next);
                 float count = getEdgeWeight(cur, next);
-                float tot = gScore.get(cur) + count;
-                Float old = gScore.get(next);
-                if (old == null || tot < old) {
-                    gScore.put(next, tot);
-                    float fin = tot + getHeuristic(next, game);
-                    openSet.add(new Node(fin, new Path<>(next, count, curPath)));
-                }
-
+                System.out.println("getEdgeWeight: " + count);
+                // =======This is for validation=======
+                return new Path<>(start);
+                // ====================================
+                // float tot = gScore.get(cur) + count;
+                // Float old = gScore.get(next);
+                // if (old == null || tot < old) {
+                // gScore.put(next, tot);
+                // float fin = tot + getHeuristic(next, game);
+                // openSet.add(new Node(fin, new Path<>(next, count, curPath)));
+                // }
             }
         }
 
         return null;
-        // ======AstarAlgs======
     }
 
     @Override
