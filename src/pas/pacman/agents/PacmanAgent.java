@@ -423,67 +423,44 @@ public class PacmanAgent
         // Find the shortest path to the place.
         // Will use the BFS to find the shortest path to target.
 
-        if (src.equals(tgt)) {
+        if (src.equals(tgt))
             return new Path<>(src);
-        }
 
-        // Will use the Queue
-        // Put it to the Queue to the path itself.
-        Queue<Path<Coordinate>> queue = new LinkedList<>();
-        // Created the path to src.
+        Queue<Path<Coordinate>> q = new LinkedList<>();
         Path<Coordinate> path = new Path<>(src);
         Set<Coordinate> seen = new HashSet<>();
 
-        // Add the current path to src. Initialization.
-        queue.add(path);
+        HashMap<Coordinate, Integer> dist = new HashMap<>();
+        dist.put(src, 0);
+
+        HashMap<Coordinate, Integer> fromSrc = moveCost.computeIfAbsent(src, k -> new HashMap<>());
+        q.add(path);
         seen.add(src);
 
-        while (!queue.isEmpty()) {
-            Path<Coordinate> curPath = queue.poll();
+        while (!q.isEmpty()) {
+            Path<Coordinate> curPath = q.poll();
             Coordinate cur = curPath.getDestination();
+            int curDist = dist.get(cur);
+
             for (Coordinate temp : getOutgoingNeighbors(cur, game)) {
-                // Caching while running BFS
-                if (moveCost.get(cur) == null || moveCost.get(cur).get(temp) == null) {
-                    moveCost.put(cur, new HashMap<>());
-                    moveCost.get(cur).put(temp, 1);
-                    System.out.println(
-                            "moveCost added: " + cur + " > " + temp + "| price: " + moveCost.get(cur).get(temp));
-                } else {
-                    moveCost.get(cur).put(temp, moveCost.get(cur).get(temp) + 1);
-                    System.out.println(
-                            "moveCost added: " + cur + " > " + temp + "| price: " + moveCost.get(cur).get(temp));
-
-                }
-                // And vice versa
-                if (moveCost.get(temp) == null || moveCost.get(temp).get(cur) == null) {
-                    moveCost.put(temp, new HashMap<>());
-                    moveCost.get(temp).put(cur, 1);
-                    System.out.println(
-                            "moveCost added: " + temp + " > " + cur + "| price: " + moveCost.get(temp).get(cur));
-
-                } else {
-                    moveCost.get(temp).put(cur, moveCost.get(temp).get(cur) + 1);
-                    System.out.println(
-                            "moveCost added: " + temp + " > " + cur + "| price: " + moveCost.get(temp).get(cur));
-
-                }
-
-                // Return the path once it hits the target.
-                if (temp.equals(tgt)) {
-                    return new Path<>(temp, 1.0f, curPath);
-                }
                 if (!seen.contains(temp)) {
-                    // Add it to the seen
+                    int d = curDist + 1;
+                    dist.put(temp, d);
+                    fromSrc.putIfAbsent(temp, d);
+
+                    moveCost.computeIfAbsent(temp, k -> new HashMap<>()).putIfAbsent(src, d);
+                    if (temp.equals(tgt)) {
+                        return new Path<>(temp, 1.0f, curPath);
+                    }
                     seen.add(temp);
-                    queue.add(new Path<>(temp, 1.0f, curPath));
+                    q.add(new Path<>(temp, 1.0f, curPath));
                 }
             }
-
         }
 
-        // unable to reach
-        return null;
+        System.out.println("graphSearch Result: " + moveCost);
 
+        return null;
     }
 
     @Override
